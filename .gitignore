@@ -19,5 +19,9 @@ lib64
 # project-specific
 *.json
 log.log
+
+# xjcl-specific
 *~
 ~
+*.save
+
