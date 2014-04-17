@@ -221,7 +221,7 @@ def listen(reddit, answered_coms, subreddits=["all"], limit=10000):
                 except Exception as e:
                     # Used here so ids saved in answered_coms will still
                     # be written to file.
-                    logging.error("Unexpected error while replying to comment:"+e)
+                    logging.error("Unexpected error while replying to comment:"+str(e))
     logging.info("Receiving comment-ids of answered comments.")
     return answered_coms
 
@@ -262,7 +262,7 @@ def runBot():
             answered_coms = listen(reddit, answered_coms, settings["subreddits"], 10000)
             delete_unpopular_coms(reddit, settings["reddit_username"], threshold=-1)
         except Exception as e: #HTTPError
-            logging.error("Error while listening to latest reddit comments:"+e)
+            logging.error("Error while listening to latest reddit comments:"+str(e))
         logging.info("Writing comment-ids to file.")
         sf = open('answered_coms.json', 'w')
         json.dump(answered_coms, sf)
