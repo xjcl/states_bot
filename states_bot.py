@@ -147,19 +147,24 @@ def format_message(states):
 
 
 def check_for_states(comment):
-    """Currently looks for 'in ST', 'In ST', 'from ST' and 'From ST'."""
+    """Currently looks for 'in ST', 'In ST', 'from ST' and 'From ST'.
+        Ignores double and ignores comments that mention the full state name
+        along with the abbreviation."""
     states = []
     states_dict = get_states_dict()
     for pattern in ["in ", "In ", "from ", "From "]:
         for index in find_all(comment.body, pattern):
             try:
                 # This next line: 'thing in AL. thing' -> 'AL'
-                state_candidate = comment.body[index+len(pattern):index+len(pattern)+2]
+                state_candidate = comment.body[
+                    index+len(pattern):index+len(pattern)+2]
                 # after_char weeds out 'in PAY', but keeps 'In PA,'
                 after_char = comment.body[index+len(pattern)+2]
                 punctuation = [" ", ",", ".", ";"]
                 if state_candidate in states_dict and after_char in punctuation:
-                    states.append(state_candidate)
+                    # ignore if full state name is mentioned as well
+                    if states_dict[state_candidate] not in comment.body:
+                        states.append(state_candidate)
             except IndexError:
                 pass # message ends in "... I am in ." or something
     states = list(set(states)) # remove doubles
@@ -201,6 +206,7 @@ def listen(reddit, answered_coms, subreddits=["all"], limit=10000):
     
     # the only way to reverse the list would be to store it locally -
     # which would be painful.
+    # Alternatively use get_new() here. Difference to get_comments() unclear.
     for comment in reddit.get_subreddit(subreddit).get_comments(limit=limit):
         if comment.id not in answered_coms:
             states = check_for_states(comment)
@@ -212,7 +218,7 @@ def listen(reddit, answered_coms, subreddits=["all"], limit=10000):
                     logging.info("Comment succeeded!")
                 except praw.errors.RateLimitExceeded:
                     logging.error("Comment failed (RateLimitExceeded)."+
-                        " /r/FreeKarma?")
+                        " You need more karma in that subreddit.")
                 #except requests.exceptions.HTTPError, e:
                 #except urllib2.HTTPError, e: # shit doesn't work :(
                 #    if e.code not in [429, 500, 502, 503, 504]:
